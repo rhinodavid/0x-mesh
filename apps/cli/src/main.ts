@@ -97,7 +97,12 @@ async function main() {
     await deleteAllFills(session);
     await deleteAllAccounts(session);
     /////////////////////////////////////
-    await createMeshFetch(session, dataApiClient, /* limit */ 100, /* page size */ 10);
+    await createMeshFetch(
+        session,
+        dataApiClient,
+        /* limit */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 100,
+        /* page size */ 50
+    );
     /////////////////////////////////////
 
     session.close();

@@ -35,44 +35,52 @@ async function main() {
     const session = driver.session({ defaultAccessMode: neo4j.session.WRITE });
     await deleteAllFills(session);
     await deleteAllAccounts(session);
-    const results = await dataApiClient
-        .query<{
-            fills: {
-                makerToken: string;
-                makerTokenSymbol: string;
-                takerToken: string;
-                takerTokenSymbol: string;
-                volumeUSD: number;
-                timestamp: string;
-                chain: {
-                    reference: string;
-                    __typename: string;
-                };
-                __typename: string;
-            }[];
-        }>(fillsQuery, { limit: 500 })
-        .toPromise();
-    // TODO (rhinodavid): Remove force unwrap
-    const { fills } = results.data!;
+    await (async function routine(limit: number) {
+        const pageSize = 5;
+        let offset = 0;
+        while (offset * pageSize < limit) {
+            console.log({offset, limit, pageSize});
+            const results = await dataApiClient
+                .query<{
+                    fills: {
+                        makerToken: string;
+                        makerTokenSymbol: string;
+                        takerToken: string;
+                        takerTokenSymbol: string;
+                        volumeUSD: number;
+                        timestamp: string;
+                        chain: {
+                            reference: string;
+                            __typename: string;
+                        };
+                        __typename: string;
+                    }[];
+                }>(fillsQuery, { limit: 100 })
+                .toPromise();
+            // TODO (rhinodavid): Remove force unwrap
+            const { fills } = results.data!;
 
-    const createdAccounts = new Set<string>();
+            const createdAccounts = new Set<string>();
 
-    // TODO (rhinodavid): stream
-    for (let fill of fills) {
-        const makerToken = new Account(fill.makerToken, parseInt(fill.chain.reference), fill.makerTokenSymbol);
-        const takerToken = new Account(fill.takerToken, parseInt(fill.chain.reference), fill.takerTokenSymbol);
-        if (!createdAccounts.has(makerToken.address)) {
-            createdAccounts.add(makerToken.address);
-            await makerToken.create(session);
+            // TODO (rhinodavid): stream
+            for (let fill of fills) {
+                const makerToken = new Account(fill.makerToken, parseInt(fill.chain.reference), fill.makerTokenSymbol);
+                const takerToken = new Account(fill.takerToken, parseInt(fill.chain.reference), fill.takerTokenSymbol);
+                if (!createdAccounts.has(makerToken.address)) {
+                    createdAccounts.add(makerToken.address);
+                    await makerToken.create(session);
+                }
+                if (!createdAccounts.has(takerToken.address)) {
+                    createdAccounts.add(takerToken.address);
+                    await takerToken.create(session);
+                }
+
+                const fillRelationship = new Fill(makerToken, takerToken, fill.volumeUSD, new Date(fill.timestamp));
+                await fillRelationship.create(session);
+            }
+            offset++;
         }
-        if (!createdAccounts.has(takerToken.address)) {
-            createdAccounts.add(takerToken.address);
-            await takerToken.create(session);
-        }
-
-        const fillRelationship = new Fill(makerToken, takerToken, fill.volumeUSD, new Date(fill.timestamp));
-        await fillRelationship.create(session);
-    }
+    })(/* limit */ 100);
     session.close();
     driver.close();
 }

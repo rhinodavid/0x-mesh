@@ -1,37 +1,17 @@
 {
-  "name": "0x-mesh",
-  "version": "1.0.0",
-  "main": "build/main.js",
-  "author": "David Walsh",
-  "license": "MIT",
-  "private": true,
-  "scripts": {
-    "dev": "nodemon",
-    "lint": "eslint --ext .ts,.js src/",
-    "test": "jest",
-    "build": "tsc",
-    "start": "node build/main.js"
-  },
+  "author": "David Walsh <5778036+rhinodavid@users.noreply.github.com>",
   "devDependencies": {
-    "@babel/core": "^7.13.8",
-    "@babel/preset-env": "^7.13.9",
-    "@babel/preset-typescript": "^7.13.0",
-    "@types/jest": "^26.0.20",
-    "@typescript-eslint/eslint-plugin": "^4.16.1",
-    "@typescript-eslint/parser": "^4.16.1",
-    "babel-jest": "^27.0.5",
-    "eslint": "^7.21.0",
-    "eslint-config-prettier": "^8.1.0",
-    "jest": "^27.0.5",
-    "nodemon": "^2.0.7",
-    "ts-node": "^10.0.0",
-    "typescript": "^4.2.3"
+    "turbo": "^1.6.1"
   },
-  "dependencies": {
-    "@urql/core": "^3.0.5",
-    "dotenv": "^16.0.3",
-    "graphql": "^16.6.0",
-    "neo4j-driver": "^5.1.0",
-    "wonka": "^6.1.0"
-  }
+  "license": "NONE",
+  "main": "index.js",
+  "name": "0x-mesh",
+  "private": true,
+  "repository": "https://github.com/rhinodavid/0x-mesh.git",
+  "scripts": {
+    "build": "turbo build",
+    "start": "turbo start"
+  },
+  "version": "1.0.0",
+  "workspaces": ["apps/*"]
 }

@@ -25,6 +25,8 @@ public
 dist
 build
 
+.turbo
+
 # For debugging purposes
 private
 .fnmrc

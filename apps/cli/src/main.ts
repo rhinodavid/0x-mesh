@@ -8,8 +8,8 @@ import { Bar } from 'cli-progress';
 config();
 
 const fillsQuery = gql`
-    query FillsQuery($limit: Int) {
-        fills(limit: $limit, order_by: { timestamp: desc }) {
+    query FillsQuery($limit: Int, $offset: Int) {
+        fills(limit: $limit, offset: $offset, order_by: { timestamp: desc }) {
             makerToken
             makerTokenSymbol
             takerToken
@@ -37,6 +37,7 @@ async function createMeshFetch(session: Session, dataApiClient: Client, limit: n
     progressBar.start(limit, 0);
 
     let offset = 0;
+    const createdAccounts = new Set<string>();
     while (offset * pageSize < limit) {
         const results = await dataApiClient
             .query<{
@@ -53,14 +54,13 @@ async function createMeshFetch(session: Session, dataApiClient: Client, limit: n
                     };
                     __typename: string;
                 }[];
-            }>(fillsQuery, { limit: pageSize })
+            }>(fillsQuery, { limit: pageSize, offset })
             .toPromise();
         // TODO (rhinodavid): Remove force unwrap
         const { fills } = results.data!;
 
-        const createdAccounts = new Set<string>();
-
         // TODO (rhinodavid): stream
+        // TODO (rhinodavid): Something is wrong with pagination
         for (let fill of fills) {
             const makerToken = new Account(fill.makerToken, parseInt(fill.chain.reference), fill.makerTokenSymbol);
             const takerToken = new Account(fill.takerToken, parseInt(fill.chain.reference), fill.takerTokenSymbol);
@@ -92,7 +92,10 @@ async function main() {
             };
         }
     });
-    const driver = neo4j.driver('neo4j://localhost', neo4j.auth.basic('neo4j', 'liquidity'));
+    const driver = neo4j.driver(
+        process.env.DATABASE_HOST ?? '',
+        neo4j.auth.basic(process.env.DATABASE_USER ?? '', process.env.DATABASE_PASSWORD ?? '')
+    );
     const session = driver.session({ defaultAccessMode: neo4j.session.WRITE });
     await deleteAllFills(session);
     await deleteAllAccounts(session);
@@ -100,8 +103,9 @@ async function main() {
     await createMeshFetch(
         session,
         dataApiClient,
-        /* limit */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 100,
-        /* page size */ 50
+        // TODO (rhinodavid): Fix pagination
+        /* limit */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 500,
+        /* page size */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 500,
     );
     /////////////////////////////////////
 

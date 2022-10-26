@@ -23,6 +23,7 @@ coverage
 
 public
 dist
+build
 
 # For debugging purposes
 private

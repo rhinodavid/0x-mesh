@@ -1,23 +1,12 @@
 {
     "compilerOptions": {
-        "allowJs": false,
-        "module": "commonjs",
-        "declaration": true,
-        "removeComments": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "noImplicitThis": false,
-        "suppressImplicitAnyIndexErrors": true,
-        "strictPropertyInitialization": false,
-        "target": "es2018",
-        "sourceMap": true,
-        "outDir": "./dist",
-        "baseUrl": "./",
-        "paths": {
-            "@/*": ["src/*"],
-            "*": ["node_modules/*", "src/typings/*"]
-        },
-        "strict": true
+      "removeComments": true,
+      "sourceMap": true,
+      "target": "es5",
+      "lib": ["esnext", "dom"],
+      "outDir": "build",
+      "esModuleInterop": true
     },
-    "exclude": ["node_modules", "aurora", "build", "src/driver/agensgraph/**/*"]
-}
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "**/*.spec.ts"]
+  }

@@ -23,7 +23,7 @@ const fillsQuery = gql`
     }
 `;
 
-async function createMeshFetch(session: Session, dataApiClient: Client, limit: number, pageSize: number = 5) {
+async function createMeshFetch(session: Session, dataApiClient: Client, limit: number, pageSize: number) {
     const progressBar = new Bar({
         // green bar, reset styles after bar element
         format: ' >> [\u001b[32m{bar}\u001b[0m] {percentage}% | ETA: {eta}s | {value}/{total}',
@@ -56,11 +56,11 @@ async function createMeshFetch(session: Session, dataApiClient: Client, limit: n
                 }[];
             }>(fillsQuery, { limit: pageSize, offset })
             .toPromise();
+
         // TODO (rhinodavid): Remove force unwrap
         const { fills } = results.data!;
 
         // TODO (rhinodavid): stream
-        // TODO (rhinodavid): Something is wrong with pagination
         for (let fill of fills) {
             const makerToken = new Account(fill.makerToken, parseInt(fill.chain.reference), fill.makerTokenSymbol);
             const takerToken = new Account(fill.takerToken, parseInt(fill.chain.reference), fill.takerTokenSymbol);
@@ -77,7 +77,6 @@ async function createMeshFetch(session: Session, dataApiClient: Client, limit: n
             await fillRelationship.create(session);
         }
         offset++;
-
         progressBar.update(offset * pageSize);
     }
     progressBar.stop();
@@ -103,9 +102,8 @@ async function main() {
     await createMeshFetch(
         session,
         dataApiClient,
-        // TODO (rhinodavid): Fix pagination
-        /* limit */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 500,
-        /* page size */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 500,
+        /* limit */ process.env.LIMIT ? parseInt(process.env.LIMIT) : 100,
+        /* page size */ process.env.PAGE_SIZE ? parseInt(process.env.PAGE_SIZE) : 10,
     );
     /////////////////////////////////////
 
